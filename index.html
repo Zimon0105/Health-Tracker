@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SymTrack">
+<meta name="theme-color" content="#0a0a0f">
+<title>SymTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c26;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f5;
+  --muted: #6b6b80;
+  --accent: #5b8af5;
+  --accent2: #3ecf8e;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;overscroll-behavior:none}
+body{display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+
+/* Nav */
+.nav{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:100;padding:0 4px}
+.nav-btn{flex:1;padding:14px 4px 12px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color .2s;font-family:var(--sans)}
+.nav-btn svg{opacity:.5;transition:opacity .2s}
+.nav-btn.active{color:var(--accent)}
+.nav-btn.active svg{opacity:1}
+
+/* Pages */
+.page{display:none;flex:1;overflow-y:auto;padding:16px 16px 80px}
+.page.active{display:block}
+
+/* Header */
+.page-header{margin-bottom:20px}
+.page-title{font-size:22px;font-weight:300;letter-spacing:-.02em;color:var(--text)}
+.page-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+
+/* Sliders */
+.slider-row{margin-bottom:14px}
+.slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.slider-label{font-size:13px;color:var(--text)}
+.slider-val{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--accent);min-width:20px;text-align:right}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 0 3px rgba(91,138,245,.2)}
+input[type=range].green::-webkit-slider-thumb{background:var(--accent2);box-shadow:0 0 0 3px rgba(62,207,142,.2)}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{padding:6px 12px;border-radius:20px;border:1px solid var(--border2);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;user-select:none;font-family:var(--sans)}
+.tag.active{border-color:var(--accent);color:var(--accent);background:rgba(91,138,245,.1)}
+.tag.sport.active{border-color:var(--accent2);color:var(--accent2);background:rgba(62,207,142,.1)}
+
+/* Checkboxes */
+.check-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.check-item:last-child{border-bottom:none}
+.check-item label{font-size:14px;color:var(--text);cursor:pointer;flex:1}
+.check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+
+/* Date */
+input[type=date]{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--text);width:100%;font-family:var(--sans);outline:none}
+
+/* Textarea */
+textarea{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:14px;color:var(--text);width:100%;font-family:var(--sans);resize:none;min-height:72px;outline:none;line-height:1.5}
+
+/* Save button */
+.save-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;font-family:var(--sans);margin-top:4px;transition:opacity .2s}
+.save-btn:active{opacity:.8}
+.save-ok{text-align:center;font-size:13px;color:var(--accent2);margin-top:8px;height:18px}
+
+/* Stats grid */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.stat-val{font-family:var(--mono);font-size:26px;font-weight:400;color:var(--text)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.stat-trend{font-size:11px;margin-top:6px}
+.up{color:var(--accent2)}.down{color:var(--danger)}.neutral{color:var(--muted)}
+
+/* Insight cards */
+.insight{border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid}
+.insight.positive{background:rgba(62,207,142,.08);border-color:rgba(62,207,142,.25)}
+.insight.negative{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}
+.insight.neutral{background:rgba(91,138,245,.08);border-color:rgba(91,138,245,.25)}
+.insight.warn{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25)}
+.insight-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.insight.positive .insight-title{color:var(--accent2)}
+.insight.negative .insight-title{color:var(--danger)}
+.insight.neutral .insight-title{color:var(--accent)}
+.insight.warn .insight-title{color:var(--warn)}
+.insight-text{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* Chart */
+.chart-wrap{position:relative;width:100%;height:200px;margin-top:4px}
+
+/* Entry list */
+.entry-item{padding:12px 0;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.entry-item:last-child{border-bottom:none}
+.entry-date{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.entry-badges{display:flex;flex-wrap:wrap;gap:4px}
+.ebadge{font-size:11px;padding:3px 8px;border-radius:8px;font-family:var(--mono)}
+.eb-e{background:rgba(91,138,245,.15);color:#7aa5f8}
+.eb-s{background:rgba(62,207,142,.15);color:#5dd9a0}
+.eb-a{background:rgba(255,255,255,.06);color:var(--muted)}
+.eb-sport{background:rgba(245,158,11,.15);color:#fbbf24}
+.eb-med{background:rgba(168,85,247,.15);color:#c084fc}
+
+/* Notification banner */
+.notif-banner{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.notif-banner svg{flex-shrink:0;opacity:.7}
+.notif-text{font-size:13px;color:var(--muted);flex:1;line-height:1.5}
+.notif-btn{padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--sans);white-space:nowrap}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;line-height:1.7}
+.empty-icon{font-size:32px;margin-bottom:12px;opacity:.4}
+
+/* Range track color */
+.track-blue{background:linear-gradient(to right,var(--accent) 0%,var(--accent) 50%,var(--border2) 50%)}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('eingabe',this)">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+    Heute
+  </button>
+  <button class="nav-btn" onclick="showPage('verlauf',this)">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 17l4-8 4 5 4-3 4 6"/></svg>
+    Verlauf
+  </button>
+  <button class="nav-btn" onclick="showPage('insights',this)">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/></svg>
+    Insights
+  </button>
+  <button class="nav-btn" onclick="showPage('stats',this)">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Stats
+  </button>
+</nav>
+
+<!-- EINGABE -->
+<div class="page active" id="page-eingabe">
+  <div class="page-header">
+    <div class="page-title">Tageseintrag</div>
+    <div class="page-sub" id="today-sub">Wie geht es dir heute?</div>
+  </div>
+
+  <div id="notif-section"></div>
+
+  <div class="card">
+    <input type="date" id="datum">
+  </div>
+
+  <div class="card">
+    <div class="card-title">Hauptsymptome</div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Energie</span><span class="slider-val" id="v-energie">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="energie" oninput="sv('energie',this.value)">
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Schleim</span><span class="slider-val" id="v-schleim">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="schleim" oninput="sv('schleim',this.value)">
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Müdigkeit</span><span class="slider-val" id="v-muede">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="muede" oninput="sv('muede',this.value)">
+    </div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Brain Fog</span><span class="slider-val" id="v-fog">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="fog" oninput="sv('fog',this.value)">
+    </div>
+    <div class="slider-row" style="margin-bottom:0">
+      <div class="slider-header"><span class="slider-label">Allgemein</span><span class="slider-val" id="v-allg">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="allg" oninput="sv('allg',this.value)">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px">1 = sehr schlecht · 10 = sehr gut</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Schlaf</div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Qualität</span><span class="slider-val" id="v-schlaf">7</span></div>
+      <input type="range" min="1" max="10" value="7" id="schlaf" oninput="sv('schlaf',this.value)">
+    </div>
+    <div class="slider-row" style="margin-bottom:0">
+      <div class="slider-header"><span class="slider-label">Stunden</span><span class="slider-val" id="v-stunden">7h</span></div>
+      <input type="range" min="3" max="12" value="7" step="0.5" id="stunden" oninput="document.getElementById('v-stunden').textContent=this.value+'h'">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">WHOOP Recovery</div>
+    <div class="slider-row" style="margin-bottom:0">
+      <div class="slider-header"><span class="slider-label">Recovery %</span><span class="slider-val" id="v-whoop">60%</span></div>
+      <input type="range" class="green" min="0" max="100" value="60" id="whoop" oninput="document.getElementById('v-whoop').textContent=this.value+'%'">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Sport & Aktivität</div>
+    <div class="tags" id="sport-tags">
+      <div class="tag sport" data-val="tennis" onclick="toggleTag(this)">Tennis</div>
+      <div class="tag sport" data-val="laufen" onclick="toggleTag(this)">Laufen</div>
+      <div class="tag sport" data-val="wandern" onclick="toggleTag(this)">Wandern</div>
+      <div class="tag sport" data-val="kraft" onclick="toggleTag(this)">Kraft</div>
+      <div class="tag sport" data-val="spazieren" onclick="toggleTag(this)">Spazieren</div>
+      <div class="tag sport" data-val="ruhe" onclick="toggleTag(this)">Ruhetag</div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="slider-header"><span class="slider-label">Intensität</span><span class="slider-val" id="v-intens">5</span></div>
+      <input type="range" min="1" max="10" value="5" id="intens" oninput="sv('intens',this.value)">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Therapie & Supplemente</div>
+    <div class="check-item"><input type="checkbox" id="cetirizin"><label for="cetirizin">Cetirizin 10mg</label></div>
+    <div class="check-item"><input type="checkbox" id="famotidin"><label for="famotidin">Famotidin 40mg</label></div>
+    <div class="check-item"><input type="checkbox" id="quercetin"><label for="quercetin">Quercetin 500mg</label></div>
+    <div class="check-item"><input type="checkbox" id="lithium"><label for="lithium">Lithium</label></div>
+    <div class="check-item"><input type="checkbox" id="tavns"><label for="tavns">taVNS</label></div>
+    <div class="check-item"><input type="checkbox" id="alkohol"><label for="alkohol">Alkohol</label></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Stress & Belastung</div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Stress-Level</span><span class="slider-val" id="v-stress">3</span></div>
+      <input type="range" min="1" max="10" value="3" id="stress" oninput="sv('stress',this.value)">
+    </div>
+    <div class="slider-row" style="margin-bottom:0">
+      <div class="slider-header"><span class="slider-label">Viel geredet</span><span class="slider-val" id="v-reden">3</span></div>
+      <input type="range" min="1" max="10" value="3" id="reden" oninput="sv('reden',this.value)">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:10px">1 = kaum · 10 = sehr viel</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Schleim-Trigger</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Wann war der Schleim am stärksten?</div>
+    <div class="tags" id="schleim-tags">
+      <div class="tag" data-val="morgen" onclick="toggleTag(this)">Morgen</div>
+      <div class="tag" data-val="mittag" onclick="toggleTag(this)">Mittag</div>
+      <div class="tag" data-val="abend" onclick="toggleTag(this)">Abend</div>
+      <div class="tag" data-val="nach-essen" onclick="toggleTag(this)">Nach Essen</div>
+      <div class="tag" data-val="kaelte" onclick="toggleTag(this)">Kälte</div>
+      <div class="tag" data-val="reden" onclick="toggleTag(this)">Beim Reden</div>
+      <div class="tag" data-val="sport" onclick="toggleTag(this)">Bei Sport</div>
+      <div class="tag" data-val="kein" onclick="toggleTag(this)">Kaum vorhanden</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Krankheitszeichen</div>
+    <div class="check-item"><input type="checkbox" id="kratzen"><label for="kratzen">Kratzen im Hals</label></div>
+    <div class="check-item"><input type="checkbox" id="schnupfen"><label for="schnupfen">Schnupfen / rinnende Nase</label></div>
+    <div class="check-item"><input type="checkbox" id="kopfdruck"><label for="kopfdruck">Kopfdruck</label></div>
+    <div class="check-item"><input type="checkbox" id="angeschlagen"><label for="angeschlagen">Leicht angeschlagen</label></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Essen & Umgebung</div>
+    <div class="slider-row">
+      <div class="slider-header"><span class="slider-label">Letzte Mahlzeit vor (h)</span><span class="slider-val" id="v-essen">3h</span></div>
+      <input type="range" min="0" max="12" value="3" step="0.5" id="essen" oninput="document.getElementById('v-essen').textContent=this.value+'h'">
+    </div>
+    <div class="check-item" style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px"><input type="checkbox" id="kaelte-tag"><label for="kaelte-tag">Kalte Temperaturen heute</label></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Notiz</div>
+    <textarea id="notiz" placeholder="Beobachtungen, Trigger, Auffälligkeiten..."></textarea>
+  </div>
+
+  <button class="save-btn" onclick="saveEntry()">Eintrag speichern</button>
+  <div class="save-ok" id="save-msg"></div>
+</div>
+
+<!-- VERLAUF -->
+<div class="page" id="page-verlauf">
+  <div class="page-header">
+    <div class="page-title">Verlauf</div>
+    <div class="page-sub">Letzte 30 Tage</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Energie · Schleim · Allgemein</div>
+    <div class="chart-wrap"><canvas id="main-chart" role="img" aria-label="Symptomentwicklung über Zeit"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Einträge</div>
+    <div id="entry-list"><div class="empty"><div class="empty-icon">○</div>Noch keine Einträge.<br>Fang heute an!</div></div>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="page" id="page-insights">
+  <div class="page-header">
+    <div class="page-title">Insights</div>
+    <div class="page-sub">Automatisch erkannte Muster</div>
+  </div>
+  <div id="insights-content"><div class="empty"><div class="empty-icon">◌</div>Noch zu wenig Daten.<br>Mindestens 7 Einträge nötig.</div></div>
+</div>
+
+<!-- STATS -->
+<div class="page" id="page-stats">
+  <div class="page-header">
+    <div class="page-title">Statistik</div>
+    <div class="page-sub" id="stats-sub">Gesamtübersicht</div>
+  </div>
+  <div class="stat-grid" id="stat-grid">
+    <div class="stat-card"><div class="stat-val" id="s-energie">–</div><div class="stat-lbl">Energie Ø</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-schleim">–</div><div class="stat-lbl">Schleim Ø</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-allg">–</div><div class="stat-lbl">Allgemein Ø</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-tage">0</div><div class="stat-lbl">Einträge</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Wochentag-Muster</div>
+    <div class="chart-wrap" style="height:160px"><canvas id="weekday-chart" role="img" aria-label="Durchschnitt nach Wochentag"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Medikamenten-Vergleich</div>
+    <div id="med-compare"><div style="font-size:13px;color:var(--muted)">Noch zu wenig Daten.</div></div>
+  </div>
+  <div style="margin-top:12px">
+    <button class="save-btn" style="background:var(--surface);color:var(--muted);border:1px solid var(--border)" onclick="exportData()">Daten exportieren (JSON)</button>
+    <div style="margin-top:8px">
+      <button class="save-btn" style="background:rgba(239,68,68,.1);color:var(--danger);border:1px solid rgba(239,68,68,.2)" onclick="if(confirm('Alle Daten wirklich löschen?')){localStorage.removeItem('symtrack2');location.reload()}">Alle Daten löschen</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const KEY='symtrack2';
+let data=[];
+try{data=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
+
+const today=new Date().toISOString().slice(0,10);
+document.getElementById('datum').value=today;
+document.getElementById('today-sub').textContent=new Date().toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long'});
+
+function sv(id,v){document.getElementById('v-'+id).textContent=v}
+function toggleTag(el){el.classList.toggle('active')}
+
+function getSport(){return[...document.querySelectorAll('#sport-tags .tag.active')].map(t=>t.dataset.val)}
+
+function saveEntry(){
+  const e={
+    datum:document.getElementById('datum').value,
+    energie:+document.getElementById('energie').value,
+    schleim:+document.getElementById('schleim').value,
+    muede:+document.getElementById('muede').value,
+    fog:+document.getElementById('fog').value,
+    allg:+document.getElementById('allg').value,
+    schlaf:+document.getElementById('schlaf').value,
+    stunden:+document.getElementById('stunden').value,
+    intens:+document.getElementById('intens').value,
+    whoop:+document.getElementById('whoop').value,
+    sport:getSport(),
+    schleim_trigger:[...document.querySelectorAll('#schleim-tags .tag.active')].map(t=>t.dataset.val),
+    stress:+document.getElementById('stress').value,
+    reden:+document.getElementById('reden').value,
+    essen:+document.getElementById('essen').value,
+    kaelte_tag:document.getElementById('kaelte-tag').checked,
+    kratzen:document.getElementById('kratzen').checked,
+    schnupfen:document.getElementById('schnupfen').checked,
+    kopfdruck:document.getElementById('kopfdruck').checked,
+    angeschlagen:document.getElementById('angeschlagen').checked,
+    cetirizin:document.getElementById('cetirizin').checked,
+    famotidin:document.getElementById('famotidin').checked,
+    quercetin:document.getElementById('quercetin').checked,
+    lithium:document.getElementById('lithium').checked,
+    tavns:document.getElementById('tavns').checked,
+    alkohol:document.getElementById('alkohol').checked,
+    notiz:document.getElementById('notiz').value
+  };
+  const i=data.findIndex(d=>d.datum===e.datum);
+  if(i>=0)data[i]=e; else data.push(e);
+  data.sort((a,b)=>a.datum.localeCompare(b.datum));
+  localStorage.setItem(KEY,JSON.stringify(data));
+  const m=document.getElementById('save-msg');
+  m.textContent='Gespeichert!';
+  setTimeout(()=>m.textContent='',2500);
+}
+
+function avg(arr){
+  const v=arr.filter(x=>x!=null&&!isNaN(x));
+  return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length*10)/10:null;
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='verlauf')renderVerlauf();
+  if(id==='insights')renderInsights();
+  if(id==='stats')renderStats();
+}
+
+let mainChart=null,weekChart=null;
+
+function renderVerlauf(){
+  const recent=data.slice(-30);
+  const list=document.getElementById('entry-list');
+  if(!recent.length){list.innerHTML='<div class="empty"><div class="empty-icon">○</div>Noch keine Einträge.</div>';return}
+  list.innerHTML=recent.slice().reverse().map(e=>{
+    const sport=e.sport&&e.sport.length?`<span class="ebadge eb-sport">${e.sport.join(' ')}</span>`:'';
+    const meds=[];
+    if(e.cetirizin)meds.push('Cetirizin');
+    if(e.famotidin)meds.push('Famotidin');
+    if(e.tavns)meds.push('taVNS');
+    if(e.lithium)meds.push('Lithium');
+    const medBadge=meds.length?`<span class="ebadge eb-med">${meds.join(' · ')}</span>`:'';
+    return`<div class="entry-item">
+      <div class="entry-date">${e.datum}</div>
+      <div class="entry-badges">
+        <span class="ebadge eb-e">E:${e.energie}</span>
+        <span class="ebadge eb-s">Sch:${e.schleim}</span>
+        <span class="ebadge eb-a">A:${e.allg}</span>
+        ${sport}${medBadge}
+      </div>
+      ${e.notiz?`<div style="font-size:12px;color:var(--muted);margin-top:2px">${e.notiz}</div>`:''}
+    </div>`}).join('');
+
+  const labels=recent.map(e=>e.datum.slice(5));
+  if(mainChart)mainChart.destroy();
+  mainChart=new Chart(document.getElementById('main-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Energie',data:recent.map(e=>e.energie),borderColor:'#5b8af5',backgroundColor:'rgba(91,138,245,.05)',tension:.35,pointRadius:2,borderWidth:2,fill:true},
+      {label:'Schleim',data:recent.map(e=>e.schleim),borderColor:'#3ecf8e',backgroundColor:'transparent',tension:.35,pointRadius:2,borderWidth:2},
+      {label:'Allgemein',data:recent.map(e=>e.allg),borderColor:'#f59e0b',backgroundColor:'transparent',tension:.35,pointRadius:2,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:1,max:10,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+              x:{ticks:{color:'#6b6b80',font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{display:false}}},
+      plugins:{legend:{labels:{color:'#6b6b80',font:{size:11},boxWidth:12,padding:12}}}}
+  });
+}
+
+function renderInsights(){
+  const c=document.getElementById('insights-content');
+  if(data.length<5){c.innerHTML='<div class="empty"><div class="empty-icon">◌</div>Noch zu wenig Daten.<br>Mindestens 5 Einträge nötig.</div>';return}
+
+  let html='';
+
+  // Antihistaminika Effekt
+  const withH=data.filter(e=>e.cetirizin||e.famotidin);
+  const withoutH=data.filter(e=>!e.cetirizin&&!e.famotidin);
+  if(withH.length>=3&&withoutH.length>=3){
+    const diff=avg(withH.map(e=>e.schleim))-avg(withoutH.map(e=>e.schleim));
+    const eDiff=avg(withH.map(e=>e.energie))-avg(withoutH.map(e=>e.energie));
+    if(Math.abs(diff)>=0.5||Math.abs(eDiff)>=0.5){
+      const type=diff<0||eDiff>0?'positive':'negative';
+      html+=`<div class="insight ${type}">
+        <div class="insight-title">${type==='positive'?'Antihistaminika zeigen Wirkung':'Antihistaminika noch kein klarer Effekt'}</div>
+        <div class="insight-text">Schleim mit Medikament: ${avg(withH.map(e=>e.schleim))} vs. ohne: ${avg(withoutH.map(e=>e.schleim))}<br>Energie mit: ${avg(withH.map(e=>e.energie))} vs. ohne: ${avg(withoutH.map(e=>e.energie))}</div>
+      </div>`;
+    }
+  }
+
+  // Sport Folgetag
+  const sportDays=data.filter((e,i)=>e.sport&&e.sport.length>0&&!e.sport.includes('ruhe')&&i<data.length-1);
+  if(sportDays.length>=3){
+    const nextE=sportDays.map(e=>{const i=data.findIndex(d=>d.datum===e.datum);return i<data.length-1?data[i+1].energie:null}).filter(v=>v);
+    const sportE=sportDays.map(e=>e.energie);
+    const ne=avg(nextE),se=avg(sportE);
+    const diff=ne-se;
+    if(Math.abs(diff)>=0.5){
+      const type=diff>=-0.3?'positive':'negative';
+      html+=`<div class="insight ${type}">
+        <div class="insight-title">${type==='positive'?'Sport destabilisiert dich nicht':'Sport beeinflusst Folgetag negativ'}</div>
+        <div class="insight-text">Energie an Sporttagen: ${se} · Am Folgetag: ${ne}<br>${diff<-0.5?'Pacing überdenken – etwas weniger Intensität könnte helfen.':'Dein System erholt sich gut nach Sport.'}</div>
+      </div>`;
+    }
+  }
+
+  // Alkohol
+  const alkDays=data.filter(e=>e.alkohol);
+  const noAlkDays=data.filter(e=>!e.alkohol);
+  if(alkDays.length>=2&&noAlkDays.length>=3){
+    const alkNext=alkDays.map(e=>{const i=data.findIndex(d=>d.datum===e.datum);return i<data.length-1?data[i+1].energie:null}).filter(v=>v);
+    const diff=avg(alkNext)-avg(noAlkDays.map(e=>e.energie));
+    if(diff<-0.5){
+      html+=`<div class="insight warn">
+        <div class="insight-title">Alkohol beeinflusst Folgetag</div>
+        <div class="insight-text">Energie am Tag nach Alkohol: ${avg(alkNext)} vs. Ø ohne: ${avg(noAlkDays.map(e=>e.energie))}</div>
+      </div>`;
+    }
+  }
+
+  // taVNS
+  const tavnsDays=data.filter(e=>e.tavns);
+  const noTavns=data.filter(e=>!e.tavns);
+  if(tavnsDays.length>=3&&noTavns.length>=3){
+    const diff=avg(tavnsDays.map(e=>e.whoop))-avg(noTavns.map(e=>e.whoop));
+    if(diff>3){
+      html+=`<div class="insight positive">
+        <div class="insight-title">taVNS verbessert Recovery</div>
+        <div class="insight-text">WHOOP mit taVNS: ${avg(tavnsDays.map(e=>e.whoop))}% · ohne: ${avg(noTavns.map(e=>e.whoop))}%</div>
+      </div>`;
+    }
+  }
+
+  // Schlaf & Schleim
+  const goodSleep=data.filter(e=>e.schlaf>=7);
+  const badSleep=data.filter(e=>e.schlaf<=4);
+  if(goodSleep.length>=3&&badSleep.length>=2){
+    const nextSchleim=(arr)=>arr.map(e=>{const i=data.findIndex(d=>d.datum===e.datum);return i<data.length-1?data[i+1].schleim:null}).filter(v=>v);
+    const diff=avg(nextSchleim(badSleep))-avg(nextSchleim(goodSleep));
+    if(diff>0.7){
+      html+=`<div class="insight warn">
+        <div class="insight-title">Schlechter Schlaf → mehr Schleim</div>
+        <div class="insight-text">Schleim nach gutem Schlaf: ${avg(nextSchleim(goodSleep))} · nach schlechtem: ${avg(nextSchleim(badSleep))}</div>
+      </div>`;
+    }
+  }
+
+  // Trend letzte 7 vs vorherige 7
+  if(data.length>=14){
+    const last7=data.slice(-7);
+    const prev7=data.slice(-14,-7);
+    const eTrend=avg(last7.map(e=>e.energie))-avg(prev7.map(e=>e.energie));
+    const sTrend=avg(last7.map(e=>e.schleim))-avg(prev7.map(e=>e.schleim));
+    if(Math.abs(eTrend)>=0.4||Math.abs(sTrend)>=0.4){
+      const type=eTrend>0?'positive':eTrend<-0.4?'negative':'neutral';
+      html+=`<div class="insight ${type}">
+        <div class="insight-title">Trend letzte 7 Tage</div>
+        <div class="insight-text">Energie: ${eTrend>0?'+':''}${eTrend.toFixed(1)} · Schleim: ${sTrend>0?'+':''}${sTrend.toFixed(1)} im Vergleich zur Vorwoche</div>
+      </div>`;
+    }
+  }
+
+  // Stress & Schleim
+  const highStress=data.filter(e=>e.stress>=7);
+  const lowStress=data.filter(e=>e.stress&&e.stress<=3);
+  if(highStress.length>=2&&lowStress.length>=2){
+    const sDiff=avg(highStress.map(e=>e.schleim))-avg(lowStress.map(e=>e.schleim));
+    if(sDiff>0.7){
+      html+=`<div class="insight warn">
+        <div class="insight-title">Stress verstärkt den Schleim</div>
+        <div class="insight-text">Schleim bei hohem Stress: ${avg(highStress.map(e=>e.schleim))} · bei niedrigem: ${avg(lowStress.map(e=>e.schleim))}</div>
+      </div>`;
+    }
+  }
+
+  // Krankheitszeichen → Folgetag
+  const krank=data.filter((e,i)=>(e.kratzen||e.schnupfen||e.angeschlagen)&&i<data.length-1);
+  if(krank.length>=2){
+    const nextE=krank.map(e=>{const i=data.findIndex(d=>d.datum===e.datum);return i<data.length-1?data[i+1].energie:null}).filter(v=>v);
+    if(nextE.length>=2){
+      html+=`<div class="insight warn">
+        <div class="insight-title">Krankheitszeichen erkannt</div>
+        <div class="insight-text">Bei ${krank.length} Tagen mit frühen Krankheitszeichen war die Energie am Folgetag Ø ${avg(nextE)}. Pacing an solchen Tagen besonders wichtig.</div>
+      </div>`;
+    }
+  }
+
+  // Kälte & Schleim
+  const kaelteTage=data.filter(e=>e.kaelte_tag);
+  const warmTage=data.filter(e=>e.kaelte_tag===false);
+  if(kaelteTage.length>=2&&warmTage.length>=2){
+    const diff=avg(kaelteTage.map(e=>e.schleim))-avg(warmTage.map(e=>e.schleim));
+    if(diff>0.6){
+      html+=`<div class="insight neutral">
+        <div class="insight-title">Kälte als Schleim-Trigger</div>
+        <div class="insight-text">Schleim an kalten Tagen: ${avg(kaelteTage.map(e=>e.schleim))} · an warmen: ${avg(warmTage.map(e=>e.schleim))}</div>
+      </div>`;
+    }
+  }
+
+'<div class="insight neutral"><div class="insight-title">Weiter beobachten</div><div class="insight-text">Noch keine signifikanten Muster erkennbar. Mit mehr Einträgen werden Zusammenhänge sichtbar.</div></div>';
+  c.innerHTML=html;
+}
+
+function renderStats(){
+  if(!data.length)return;
+  document.getElementById('stats-sub').textContent=`${data.length} Einträge · seit ${data[0].datum}`;
+  document.getElementById('s-energie').textContent=avg(data.map(e=>e.energie))??'–';
+  document.getElementById('s-schleim').textContent=avg(data.map(e=>e.schleim))??'–';
+  document.getElementById('s-allg').textContent=avg(data.map(e=>e.allg))??'–';
+  document.getElementById('s-tage').textContent=data.length;
+
+  // Weekday chart
+  const days=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const byDay=days.map((_,i)=>data.filter(e=>new Date(e.datum).getDay()===i));
+  const dayAvg=byDay.map(arr=>arr.length?avg(arr.map(e=>e.energie)):null);
+  if(weekChart)weekChart.destroy();
+  weekChart=new Chart(document.getElementById('weekday-chart'),{
+    type:'bar',
+    data:{labels:days,datasets:[{label:'Energie Ø',data:dayAvg,backgroundColor:'rgba(91,138,245,.5)',borderColor:'#5b8af5',borderWidth:1,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{min:1,max:10,ticks:{color:'#6b6b80',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+              x:{ticks:{color:'#6b6b80',font:{size:11}},grid:{display:false}}},
+      plugins:{legend:{display:false}}}
+  });
+
+  // Med compare
+  const pairs=[
+    {name:'Cetirizin',key:'cetirizin'},
+    {name:'Famotidin',key:'famotidin'},
+    {name:'taVNS',key:'tavns'},
+    {name:'Lithium',key:'lithium'}
+  ];
+  let medHtml='';
+  pairs.forEach(p=>{
+    const w=data.filter(e=>e[p.key]);
+    const wo=data.filter(e=>!e[p.key]);
+    if(w.length>=2&&wo.length>=2){
+      const wE=avg(w.map(e=>e.energie));
+      const woE=avg(wo.map(e=>e.energie));
+      const diff=wE-woE;
+      const col=diff>0.3?'var(--accent2)':diff<-0.3?'var(--danger)':'var(--muted)';
+      medHtml+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:var(--text)">${p.name}</span>
+        <span style="font-family:var(--mono);color:${col}">${diff>0?'+':''}${diff.toFixed(1)} Energie (n=${w.length})</span>
+      </div>`;
+    }
+  });
+  document.getElementById('med-compare').innerHTML=medHtml||'<div style="font-size:13px;color:var(--muted)">Noch zu wenig Daten.</div>';
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='symtrack-export.json';a.click();
+}
+
+// Notification prompt
+function checkNotifPrompt(){
+  if('Notification' in window&&Notification.permission==='default'&&!localStorage.getItem('notif-asked')){
+    document.getElementById('notif-section').innerHTML=`
+      <div class="notif-banner">
+        <svg width="20" height="20" fill="none" stroke="#5b8af5" stroke-width="1.5" viewBox="0 0 24 24"><path d="M15 17H20L18.6 15.6A1 1 0 0118 14.8V11A6 6 0 006 11v3.8A1 1 0 015.4 15.6L4 17H9M15 17V18A3 3 0 019 18V17M15 17H9"/></svg>
+        <div class="notif-text">Tägliche Erinnerung um 20 Uhr aktivieren?</div>
+        <button class="notif-btn" onclick="requestNotif()">Ja</button>
+      </div>`;
+  }
+}
+
+function requestNotif(){
+  localStorage.setItem('notif-asked','1');
+  Notification.requestPermission().then(p=>{
+    document.getElementById('notif-section').innerHTML='';
+    if(p==='granted')scheduleNotif();
+  });
+}
+
+function scheduleNotif(){
+  if('serviceWorker' in navigator)return;
+  const now=new Date();
+  const next=new Date();
+  next.setHours(20,0,0,0);
+  if(next<=now)next.setDate(next.getDate()+1);
+  setTimeout(()=>{
+    if(Notification.permission==='granted'){
+      new Notification('SymTrack',{body:'Wie war dein Tag? Trag deine Symptome ein.',icon:''});
+    }
+    setInterval(()=>{
+      if(Notification.permission==='granted')new Notification('SymTrack',{body:'Tageseintrag nicht vergessen!',icon:''});
+    },86400000);
+  },next-now);
+}
+
+// Init
+checkNotifPrompt();
+if(Notification.permission==='granted')scheduleNotif();
+</script>
+</body>
+</html>
